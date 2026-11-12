@@ -1,4 +1,3 @@
-#include <TM1637Display.h>
 #include <WiFiS3.h>
 
 const char* ssid     = "Landin's iphone (2)";     // Ensure no spaces/apostrophes if renamed
@@ -13,12 +12,9 @@ const char* serverIP = "172.20.10.2"; // Your Mac's IP on the hotspot
 const int   serverPort = 5000;
 
 const int BUTTON_PIN = 2;
-const int CLK_PIN    = 4;
-const int DIO_PIN    = 5;
 const int BUZZER_PIN = 8;
 const unsigned long BUTTON_DEBOUNCE_MS = 30;
 
-TM1637Display display(CLK_PIN, DIO_PIN);
 WiFiClient client;
 
 void waitForStableButtonState(uint8_t targetState) {
@@ -67,10 +63,6 @@ void setup() {
 
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(BUZZER_PIN, OUTPUT);
-  display.setBrightness(0x0f);
-
-  uint8_t readySegments[] = { SEG_G, SEG_G, SEG_G, SEG_G };
-  display.setSegments(readySegments);
 
   // Apply static IP configuration before connecting
   WiFi.config(ip, gateway, subnet);
@@ -108,7 +100,6 @@ void loop() {
 
   waitForStableButtonState(HIGH);
   waitForButtonPress();
-  display.showNumberDec(0, true);
   Serial.println("Round armed. Waiting for random delay...");
 
   // The start press must be released before the reaction window begins.
@@ -128,14 +119,6 @@ void loop() {
 
   if (falseStart) {
     Serial.println("False start! Button pressed too early.");
-    // Show 'Err' on display
-    uint8_t errSegments[] = { SEG_A | SEG_D | SEG_E | SEG_F | SEG_G, SEG_E | SEG_G, SEG_E | SEG_G, 0x00 };
-    display.setSegments(errSegments);
-    delay(2000);
-
-    // Reset to ready dashes
-    uint8_t readySegments[] = { SEG_G, SEG_G, SEG_G, SEG_G };
-    display.setSegments(readySegments);
     return;
   }
 
@@ -150,18 +133,10 @@ void loop() {
   digitalWrite(BUZZER_PIN, LOW);
   unsigned long reactionTime = pressedAt - reactionStart;
 
-  // Output score to display and backend
-  display.showNumberDec(reactionTime, false);
+  // Output score to Serial Monitor and backend
   Serial.print("Reaction Time recorded: ");
   Serial.print(reactionTime);
   Serial.println(" ms");
 
   sendScoreToBackend(reactionTime);
-
-  // Pause so user can read score
-  delay(3000);
-
-  // Reset display back to ready bars
-  uint8_t readySegments[] = { SEG_G, SEG_G, SEG_G, SEG_G };
-  display.setSegments(readySegments);
 }
