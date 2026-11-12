@@ -1,9 +1,15 @@
 #include <TM1637Display.h>
 #include <WiFiS3.h>
 
-const char* ssid     = "Landin's iphone (2)";
+const char* ssid     = "Landin's iphone (2)";     // Ensure no spaces/apostrophes if renamed
 const char* password = "Landin48";
-const char* serverIP = "172.20.10.2"; // IP address
+
+// Manually assign a static IP within your iPhone hotspot's subnet (e.g., 172.20.10.15)
+IPAddress ip(172, 20, 10, 15);
+IPAddress gateway(172, 20, 10, 1);
+IPAddress subnet(255, 255, 255, 0);
+
+const char* serverIP = "172.20.10.2"; // Your Mac's IP on the hotspot
 const int   serverPort = 5000;
 
 const int BUTTON_PIN = 2;
@@ -16,7 +22,7 @@ WiFiClient client;
 
 void setup() {
   Serial.begin(115200);
-  delay(1000); // Give the serial port a second to open
+  delay(1000);
   Serial.println("=== SYSTEM BOOTING ===");
 
   pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -26,10 +32,14 @@ void setup() {
   uint8_t readySegments[] = { SEG_G, SEG_G, SEG_G, SEG_G };
   display.setSegments(readySegments);
 
-  Serial.print("Connecting to Wi-Fi: ");
+  // Apply static IP configuration before connecting
+  WiFi.config(ip, gateway, subnet);
+
+  Serial.print("Connecting to Wi-Fi with static IP: ");
   Serial.println(ssid);
-  
+
   WiFi.begin(ssid, password);
+
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
