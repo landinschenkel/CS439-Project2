@@ -67,4 +67,4 @@ def dashboard():
     return render_template_string(html_layout, total_attempts=total_attempts, best_score=best_score, avg_score=avg_score, attempts=reaction_data)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
