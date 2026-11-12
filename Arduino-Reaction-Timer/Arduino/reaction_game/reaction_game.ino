@@ -16,9 +16,49 @@ const int BUTTON_PIN = 2;
 const int CLK_PIN    = 4;
 const int DIO_PIN    = 5;
 const int BUZZER_PIN = 8;
+const unsigned long BUTTON_DEBOUNCE_MS = 30;
 
 TM1637Display display(CLK_PIN, DIO_PIN);
 WiFiClient client;
+
+void waitForStableButtonState(uint8_t targetState) {
+  unsigned long stableSince = millis();
+
+  while (millis() - stableSince < BUTTON_DEBOUNCE_MS) {
+    if (digitalRead(BUTTON_PIN) != targetState) {
+      stableSince = millis();
+    }
+    delay(1);
+  }
+}
+
+bool isButtonPressed() {
+  if (digitalRead(BUTTON_PIN) != LOW) {
+    return false;
+  }
+
+  unsigned long pressedSince = millis();
+  while (millis() - pressedSince < BUTTON_DEBOUNCE_MS) {
+    if (digitalRead(BUTTON_PIN) != LOW) {
+      return false;
+    }
+    delay(1);
+  }
+  return true;
+}
+
+unsigned long waitForButtonPress() {
+  while (true) {
+    while (digitalRead(BUTTON_PIN) != LOW) {
+      delay(1);
+    }
+
+    unsigned long pressedAt = millis();
+    if (isButtonPressed()) {
+      return pressedAt;
+    }
+  }
+}
 
 void setup() {
   Serial.begin(115200);
@@ -66,27 +106,21 @@ void sendScoreToBackend(unsigned long reactionTime) {
 void loop() {
   Serial.println("Waiting for button press to start round...");
 
-  // Ensure button is released before starting new round
-  while (digitalRead(BUTTON_PIN) == LOW) {
-    delay(10);
-  }
-
-  // Wait for button press to arm the game
-  while (digitalRead(BUTTON_PIN) == HIGH) {
-    delay(10);
-  }
-
-  display.clear();
+  waitForStableButtonState(HIGH);
+  waitForButtonPress();
+  display.showNumberDec(0, true);
   Serial.println("Round armed. Waiting for random delay...");
+
+  // The start press must be released before the reaction window begins.
+  waitForStableButtonState(HIGH);
 
   // Random delay between 2 to 5 seconds
   unsigned long randomDelay = random(2000, 5000);
   unsigned long startTime = millis();
 
-  // Non-blocking wait that checks for early false starts
   bool falseStart = false;
   while (millis() - startTime < randomDelay) {
-    if (digitalRead(BUTTON_PIN) == LOW) {
+    if (isButtonPressed()) {
       falseStart = true;
       break;
     }
@@ -110,14 +144,11 @@ void loop() {
   unsigned long reactionStart = millis();
   Serial.println("BUZZER ON! React now!");
 
-  // Wait for player to press button in response to buzzer
-  while (digitalRead(BUTTON_PIN) == HIGH) {
-    // Waiting for reaction press
-  }
+  unsigned long pressedAt = waitForButtonPress();
 
   // Turn off buzzer immediately
   digitalWrite(BUZZER_PIN, LOW);
-  unsigned long reactionTime = millis() - reactionStart;
+  unsigned long reactionTime = pressedAt - reactionStart;
 
   // Output score to display and backend
   display.showNumberDec(reactionTime, false);
