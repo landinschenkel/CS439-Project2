@@ -1,9 +1,9 @@
 #include <TM1637Display.h>
 #include <WiFiS3.h>
 
-const char* ssid       = "Landin's iphone (2)";
-const char* password   = "Landin48";
-const char* serverIP   = "172.20.10.2"; // IP address
+const char* ssid     = "Landin's iphone (2)";
+const char* password = "Landin48";
+const char* serverIP = "172.20.10.2"; // IP address
 const int   serverPort = 5000;
 
 const int BUTTON_PIN = 2;
