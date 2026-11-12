@@ -9,7 +9,7 @@ IPAddress gateway(172, 20, 10, 1);
 IPAddress subnet(255, 255, 255, 0);
 
 const char* serverIP = "172.20.10.2"; // Your Mac's IP on the hotspot
-const int   serverPort = 5000;
+const int   serverPort = 5001;
 
 const int BUTTON_PIN = 2;
 const int BUZZER_PIN = 8;
