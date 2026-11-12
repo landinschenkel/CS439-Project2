@@ -1,9 +1,9 @@
 #include <TM1637Display.h>
 #include <WiFiS3.h>
 
-const char* ssid       = "IPFrequently67;
-const char* password   = "ItHertzWhenIP67";
-const char* serverIP   = "192.168.1.201"; // IP address
+const char* ssid       = "Landin's iphone (2)";
+const char* password   = "Landin48";
+const char* serverIP   = "172.20.10.2"; // IP address
 const int   serverPort = 5000;
 
 const int BUTTON_PIN = 2;
@@ -16,6 +16,9 @@ WiFiClient client;
 
 void setup() {
   Serial.begin(115200);
+  delay(1000); // Give the serial port a second to open
+  Serial.println("=== SYSTEM BOOTING ===");
+
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(BUZZER_PIN, OUTPUT);
   display.setBrightness(0x0f);
@@ -23,12 +26,19 @@ void setup() {
   uint8_t readySegments[] = { SEG_G, SEG_G, SEG_G, SEG_G };
   display.setSegments(readySegments);
 
+  Serial.print("Connecting to Wi-Fi: ");
+  Serial.println(ssid);
+  
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
+    Serial.print(".");
   }
+  
+  Serial.println("\nWiFi Connected!");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.localIP());
 }
-
 void sendScoreToBackend(unsigned long reactionTime) {
   if (client.connect(serverIP, serverPort)) {
     String jsonBody = "{\"reaction_time\":" + String(reactionTime) + "}";
